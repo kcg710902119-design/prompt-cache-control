@@ -1,0 +1,6 @@
+{
+  "name": "prompt-cache-control",
+  "owner": { "name": "kcg710902119-design" },
+  "metadata": { "description": "프롬프트 캐시 미터 mod (한국어화 버전)" },
+  "plugins": [{ "name": "prompt-cache-control", "source": "./" }]
+}

@@ -1,0 +1,61 @@
+{
+  "name": "prompt-cache-control",
+  "version": "0.1.0",
+  "description": "프롬프트 입력창 위에 표시되는 프롬프트 캐시 미터: 요청마다 캐시에서 읽은/기록한/캐시 없이 보낸 토큰 수, 캐시 만료까지의 실시간 카운트다운, 그리고 권장 조치(계속 진행, /compact 또는 /clear). TTL은 계정에 맞는 Claude Code 규칙(Claude 구독 1시간, API 키·클라우드·사용 크레딧 5분, TTL 환경변수·설정 반영)을 따르고 요청 간격으로 자동 보정됩니다. /cache 로 턴별 표를 엽니다.",
+  "author": {
+    "name": "claude-code-templates",
+    "url": "https://www.aitmpl.com"
+  },
+  "repository": "https://github.com/davila7/claude-code-templates",
+  "license": "MIT",
+  "keywords": [
+    "mod",
+    "function-hooks",
+    "observability",
+    "prompt-caching",
+    "cost"
+  ],
+  "userConfig": {
+    "ttl": {
+      "type": "string",
+      "title": "캐시 수명",
+      "description": "요청 후 캐시 유지 시간: auto는 Claude Code 규칙을 따르며 요청 간격으로 자동 보정, 5m 또는 1h는 고정",
+      "default": "auto",
+      "options": [
+        "auto",
+        "5m",
+        "1h"
+      ]
+    },
+    "warnSeconds": {
+      "type": "number",
+      "title": "만료 전 경고 (초)",
+      "description": "카운트다운이 이 초 이하로 남으면 밴드가 노란색으로 바뀌고 만료 임박 토스트를 표시",
+      "default": 60
+    },
+    "compactAtTokens": {
+      "type": "number",
+      "title": "큰 컨텍스트 기준 (토큰)",
+      "description": "프롬프트가 이 크기 이상일 때 캐시가 만료되면 전체를 다시 기록하기 전에 /compact (또는 /clear)를 권장",
+      "default": 100000
+    },
+    "band": {
+      "type": "boolean",
+      "title": "프롬프트 위 밴드",
+      "description": "프롬프트 위에 한 줄로 미터를 표시",
+      "default": true
+    },
+    "status": {
+      "type": "boolean",
+      "title": "상태 줄 항목",
+      "description": "프롬프트 아래에 짧은 항목(적중률과 카운트다운)도 고정 표시",
+      "default": false
+    },
+    "toast": {
+      "type": "boolean",
+      "title": "만료 임박 토스트",
+      "description": "캐시 만료가 다가올 때 토스트 표시: 경고 기준 시점, 이후 10·3·2·1초 (2만 토큰 이상 프롬프트에서만)",
+      "default": true
+    }
+  }
+}
