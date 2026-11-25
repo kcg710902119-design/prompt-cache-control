@@ -104,7 +104,7 @@ const COLOR: Record<Advice['kind'], string | undefined> = {
 function shortLine(policy: Policy, now: number): string {
   const { last, advice, left } = current(policy, now)
   if (!last || advice.kind === 'off') return `캐시: ${advice.text}`
-  const clock = left > 0 ? ` · ${fmtClock(left)}` : ''
+  const clock = left > 0 ? `, ${fmtClock(left)}` : ''
   return `캐시 ${Math.round(hitRatio(last) * 100)}%${clock}`
 }
 
@@ -266,7 +266,7 @@ export const register: Register = (on, options) => {
     await $.ui.open({ id: PANE, title: '캐시', focus: true })
     $.ui.invalidate('ui.render')
     const { advice } = current(policy, Date.now())
-    return { text: `${ttl} 캐시 (${ttlSource}) · ${advice.text} · /${COMMAND} stop 으로 닫기` }
+    return { text: `${ttl} 캐시 (${ttlSource}), ${advice.text}, /${COMMAND} stop 으로 닫기` }
   })
 
   on('ui.close', async ($, e, next) => {
@@ -286,7 +286,7 @@ export const register: Register = (on, options) => {
     const { last, advice, left } = current(policy, Date.now())
     if (!last && advice.kind !== 'off') return next(e)
     const { Box, Text } = $.ui.resolve(e)
-    const columns = e.viewport?.columns ?? 100
+    const columns = e.props.bodyColumns ?? e.viewport?.columns ?? 100
     const color = COLOR[advice.kind]
     // The band is one instance: whatever the plugins beneath draw (another mod's band) stays, under this line.
     const below = await next(e)
@@ -300,26 +300,29 @@ export const register: Register = (on, options) => {
     if (!last) return stack(<Text dimColor>{fit(`캐시: ${advice.text}`, columns)}</Text>)
 
     const ratio = hitRatio(last)
-    const wide = columns >= 90
+    const wide = columns >= 80
+    const cells = wide ? 10 : 6
     return stack(
       <Box flexDirection="row" columnGap={1}>
         <Text bold color={color}>{advice.kind === 'warm' ? '●' : advice.kind === 'soon' ? '▲' : advice.kind === 'off' || advice.kind === 'cold' || advice.kind === 'uncached' ? '○' : '✖'}</Text>
         <Text bold color="cyan">캐시</Text>
-        <Text color={color}>{bar(ratio, wide ? 10 : 6)}</Text>
-        <Text bold>{`${Math.round(ratio * 100)}%`}</Text>
-        {wide ? (
-          <>
-            <Text color="green">{`읽음 ${fmtTokens(last.read)}`}</Text>
-            <Text color="yellow">{`기록 ${fmtTokens(last.write)}`}</Text>
-            <Text color="cyan">{`신규 ${fmtTokens(last.fresh)}`}</Text>
-          </>
+        {e.surface === 'terminal' ? (
+          <Text color={color}>{bar(ratio, cells)}</Text>
         ) : (
-          <Text dimColor>{`${fmtTokens(promptTokens(last))} 토큰`}</Text>
+          <Box flexDirection="row" width={cells} height={1} flexShrink={0}>
+            <Box width={Math.round(ratio * cells)} height={1} flexShrink={0} backgroundColor={color} />
+            <Box width={cells - Math.round(ratio * cells)} height={1} flexShrink={0} backgroundColor="subtle" />
+          </Box>
         )}
+        <Text bold>{`${Math.round(ratio * 100)}%`}</Text>
+        {wide && <Text color="green">{`읽음 ${fmtTokens(last.read)}`}</Text>}
+        {wide && <Text color="yellow">{`기록 ${fmtTokens(last.write)}`}</Text>}
+        {wide && <Text color="cyan">{`신규 ${fmtTokens(last.fresh)}`}</Text>}
+        {!wide && <Text dimColor>{`${fmtTokens(promptTokens(last))} 토큰`}</Text>}
         {advice.kind !== 'uncached' && advice.kind !== 'off' && (
           <Text bold color={left > 0 ? lifeColor(left, ttl, policy.warnMs) : 'red'}>{left > 0 ? `⏱ ${fmtClock(left)}` : '⏱ 0:00'}</Text>
         )}
-        <Text dimColor wrap="truncate-end">{`${ttl} · ${advice.text}`}</Text>
+        <Text dimColor wrap="truncate-end">{`${ttl}, ${advice.text}`}</Text>
       </Box>,
     )
   })
@@ -361,7 +364,7 @@ export const register: Register = (on, options) => {
       <Box flexDirection="column">
         <Box key="title" flexDirection="row" columnGap={1}>
           <Text bold color="cyan">{sp('⚡ 프롬프트 캐시')}</Text>
-          <Text dimColor>{sp(`· 수명 ${ttl} (${ttlSource})`)}</Text>
+          <Text dimColor>{sp(`수명 ${ttl} (${ttlSource})`)}</Text>
         </Box>
 
         <Box key="clock" flexDirection="column" marginTop={1}>
@@ -376,7 +379,7 @@ export const register: Register = (on, options) => {
 
         <Box key="advice" marginTop={1} flexDirection="column">
           <Text bold color={stateColor}>{sp(`${icon} ${advice.text}`)}</Text>
-          {last ? <Text dimColor>{sp(fit(`${last.model} · 프롬프트 ${fmtTokens(promptTokens(last))} 토큰`, width))}</Text> : null}
+          {last ? <Text dimColor>{sp(fit(`${last.model}, 프롬프트 ${fmtTokens(promptTokens(last))} 토큰`, width))}</Text> : null}
         </Box>
 
         {last ? (

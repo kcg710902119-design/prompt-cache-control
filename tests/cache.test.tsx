@@ -208,13 +208,13 @@ describe('the band', () => {
     expect(await ui.find({ type: 'Text', text: /읽음 80k/ })).toBeDefined()
     expect(await ui.find({ type: 'Text', text: /기록 1k/ })).toBeDefined()
     expect(await ui.find({ type: 'Text', text: /신규 300/ })).toBeDefined()
-    expect(await ui.find({ type: 'Text', text: /5m · 활성/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /5m, 활성/ })).toBeDefined()
     // ours first, what the plugins beneath drew under it
     const texts = (await ui.findAll({ type: 'Text', text: /98%|beneath/ })).map(t => t.text)
     expect(texts.at(-1)).toBe('beneath')
     expect(texts.slice(0, -1).some(t => /98%/.test(t))).toBe(true)
     await ui.unmount()
-    expect(calls.status.at(-1)).toMatch(/^캐시 98% · [45]:\d\d$/)
+    expect(calls.status.at(-1)).toMatch(/^캐시 98%, [45]:\d\d$/)
   })
 
   test('a subagent request is not the main loop and leaves the meter alone', { options: { status: true } }, async ($, on) => {
@@ -234,7 +234,7 @@ describe('the band', () => {
     expect(calls.logs.join('\n')).toContain('1h 캐시 (ENABLE_PROMPT_CACHING_1H)')
     await step($)
     const ui = await band($)
-    expect(await ui.find({ type: 'Text', text: /1h · 활성/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /1h, 활성/ })).toBeDefined()
     await ui.unmount()
   })
 
@@ -363,5 +363,22 @@ describe('which lifetime Claude Code asks for', () => {
     expect(accountOf([{ kind: 'spend_limit', percentUsed: 10 }])).toBe('other')
     expect(accountOf([{ kind: 'five_hour', percentUsed: 20 }, { kind: 'seven_day', percentUsed: 5 }])).toBe('subscription')
     expect(accountOf([{ kind: 'five_hour', percentUsed: 100 }])).toBe('credits')
+  })
+})
+
+describe('the desktop band', () => {
+  test('the bar is filled Boxes and every figure sits in the one row', async ($, on) => {
+    fakeEngine(on, {}, { status: [], logs: [] })
+    await $.session.start({ cwd: '/repo', surface: 'desktop', isInteractive: true } as never)
+    await step($)
+    const ui = await $.ui.mount({ plugin: 'prompt-cache-control', surface: 'desktop', component: 'AbovePrompt', props: { hasSurvey: false, bodyColumns: 90 } as never })
+    const segs = (await ui.findAll({ type: 'Box' })).filter(b => b.props.backgroundColor !== undefined)
+    expect(segs.reduce((n, b) => n + Number(b.props.width), 0)).toBe(10)
+    expect(await ui.find({ type: 'Text', text: /[█░]/ })).toBeUndefined()
+    // 줄과 숫자 사이에 묶음 태그가 없어야 한다: HTML에서 세로로 쌓였다
+    const drawn = JSON.stringify(await ui.drawn())
+    expect(drawn).toContain('읽음 80k')
+    expect(drawn).not.toContain('"Fragment"')
+    await ui.unmount()
   })
 })

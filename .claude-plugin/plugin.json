@@ -1,6 +1,6 @@
 {
   "name": "prompt-cache-control",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "프롬프트 입력창 위에 표시되는 프롬프트 캐시 미터: 요청마다 캐시에서 읽은/기록한/캐시 없이 보낸 토큰 수, 캐시 만료까지의 실시간 카운트다운, 그리고 권장 조치(계속 진행, /compact 또는 /clear). TTL은 계정에 맞는 Claude Code 규칙(Claude 구독 1시간, API 키·클라우드·사용 크레딧 5분, TTL 환경변수·설정 반영)을 따르고 요청 간격으로 자동 보정됩니다. /cache 로 턴별 표를 엽니다.",
   "author": {
     "name": "claude-code-templates",
