@@ -12,7 +12,7 @@ cache ░░░░░░░░░░  0% read 0 · wrote 52k · new 300 ⏱ 4:58
 cache ██████████ 98% read 150k · wrote 1k · new 300 ⏱ 0:00 5m · expired: the next message rewrites 151k tokens. /compact first, or /clear if the task is done
 ```
 
-`/cache` opens a pane: the time left with a solid bar that shrinks as the cache runs out (green, yellow below 40% of the lifetime, red from the warning threshold), a stacked read / wrote / new bar for the last request, and a colour-coded table with one row per turn. Bars are filled cells and columns have fixed widths with no-break spaces, so the terminal and the Desktop (HTML) pane render the same.
+`/cache` opens a pane: the time left with a solid bar that shrinks as the cache runs out (green, amber below 40% of the lifetime, red from the warning threshold), a stacked read / wrote / new bar for the last request, and a colour-coded table with one row per turn. Bars are filled cells and columns have fixed widths with no-break spaces, so the terminal and the Desktop (HTML) pane render the same.
 
 ## How the countdown works
 
@@ -61,7 +61,7 @@ Other switches read from the environment at session start:
 
 ```
   ttl: string               "auto" | "5m" | "1h" (default auto)
-  warnSeconds: number       countdown threshold for the yellow state and the toast (default 60)
+  warnSeconds: number       countdown threshold for the amber state and the toast (default 60)
   compactAtTokens: number   prompt size that makes an expired cache suggest /compact (default 100000)
   band: boolean             row above the prompt (default true)
   status: boolean           entry under the prompt, "cache 98% · 3:41" (default false)

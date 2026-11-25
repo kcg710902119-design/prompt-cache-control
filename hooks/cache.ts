@@ -278,12 +278,15 @@ export function nextToastMark(secsLeft: number, warnSecs: number, level: number)
   return due.length ? Math.min(...due) : undefined
 }
 
-export type LifeColor = 'green' | 'yellow' | 'red'
+// 주의 색: 노란색은 흰 배경에서 안 보여 진한 황갈색으로 쓴다
+export const WARN_COLOR = '#a16207'
 
-/** Countdown colour: green while there is plenty, yellow below 40% of the lifetime, red from the warning threshold down. */
+export type LifeColor = 'green' | typeof WARN_COLOR | 'red'
+
+/** Countdown colour: green while there is plenty, amber below 40% of the lifetime, red from the warning threshold down. */
 export function lifeColor(leftMs: number, ttl: Ttl, warnMs: number): LifeColor {
   if (leftMs <= warnMs) return 'red'
-  return leftMs / ttlMs(ttl) <= 0.4 ? 'yellow' : 'green'
+  return leftMs / ttlMs(ttl) <= 0.4 ? WARN_COLOR : 'green'
 }
 
 // requests are timed from their start, so a little slack keeps a hit that

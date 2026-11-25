@@ -37,6 +37,7 @@ import type { EngineInterface, Register } from 'claude-code'
 import {
   advise,
   COUNTDOWN_MARKS,
+  WARN_COLOR,
   bar,
   byTurn,
   fit,
@@ -60,6 +61,8 @@ import type { Account, Advice, CacheEnv, Sample, Ttl } from './cache.ts'
 
 const PANE = 'cache'
 const COMMAND = 'cache'
+// 기록 색: 노란색은 흰 배경에서 안 보여 진한 주황색으로 쓴다
+const WRITE_COLOR = '#c2410c'
 const KEEP = 200
 // below this a lapsed cache costs too little to interrupt anyone about
 const TOAST_MIN_TOKENS = 20_000
@@ -93,7 +96,7 @@ function current(policy: Policy, now: number) {
 
 const COLOR: Record<Advice['kind'], string | undefined> = {
   warm: 'green',
-  soon: 'yellow',
+  soon: WARN_COLOR,
   expired: 'red',
   miss: 'red',
   off: undefined,
@@ -316,7 +319,7 @@ export const register: Register = (on, options) => {
         )}
         <Text bold>{`${Math.round(ratio * 100)}%`}</Text>
         {wide && <Text color="green">{`읽음 ${fmtTokens(last.read)}`}</Text>}
-        {wide && <Text color="yellow">{`기록 ${fmtTokens(last.write)}`}</Text>}
+        {wide && <Text color={WRITE_COLOR}>{`기록 ${fmtTokens(last.write)}`}</Text>}
         {wide && <Text color="cyan">{`신규 ${fmtTokens(last.fresh)}`}</Text>}
         {!wide && <Text dimColor>{`${fmtTokens(promptTokens(last))} 토큰`}</Text>}
         {advice.kind !== 'uncached' && advice.kind !== 'off' && (
@@ -337,10 +340,10 @@ export const register: Register = (on, options) => {
     const { last, advice, left } = current(policy, now)
     const all = byTurn(samples)
     const counting = !!last && advice.kind !== 'uncached' && advice.kind !== 'off'
-    // the countdown goes green, then yellow, then red as the cache runs out
+    // the countdown goes green, then amber, then red as the cache runs out
     const clockColor = counting ? lifeColor(left, ttl, policy.warnMs) : undefined
     const stateColor = advice.kind === 'expired' || advice.kind === 'miss' ? 'red' : (clockColor ?? COLOR[advice.kind])
-    const hitColor = (pct: number) => (pct >= 80 ? 'green' : pct >= 40 ? 'yellow' : 'red')
+    const hitColor = (pct: number) => (pct >= 80 ? 'green' : pct >= 40 ? WARN_COLOR : 'red')
     // solid bars are filled Boxes, not block characters, so HTML draws no seams between cells
     const solid = (key: string, parts: [number, string | undefined][]) => (
       <Box key={key} flexDirection="row" height={1} flexShrink={0}>
@@ -385,12 +388,12 @@ export const register: Register = (on, options) => {
         {last ? (
           <Box key="stack" flexDirection="column" marginTop={1}>
             <Box flexDirection="row" columnGap={1}>
-              {solid('stack', [[sr, 'green'], [sw, 'yellow'], [sn, 'cyan']])}
+              {solid('stack', [[sr, 'green'], [sw, WRITE_COLOR], [sn, 'cyan']])}
               <Text bold color={hitColor(Math.round(hitRatio(last) * 100))}>{sp(`적중 ${Math.round(hitRatio(last) * 100)}%`)}</Text>
             </Box>
             <Box flexDirection="row" columnGap={2}>
               <Text color="green">{sp(`■ 읽음 ${fmtTokens(last.read)}`)}</Text>
-              <Text color="yellow">{sp(`■ 기록 ${fmtTokens(last.write)}`)}</Text>
+              <Text color={WRITE_COLOR}>{sp(`■ 기록 ${fmtTokens(last.write)}`)}</Text>
               <Text color="cyan">{sp(`■ 신규 ${fmtTokens(last.fresh)}`)}</Text>
             </Box>
           </Box>
@@ -401,7 +404,7 @@ export const register: Register = (on, options) => {
             {cell('h:turn', 4, '턴', 'cyan', true)}
             {cell('h:steps', 5, '요청', 'cyan', true)}
             {cell('h:read', 6, '읽음', 'green', true)}
-            {cell('h:wrote', 6, '기록', 'yellow', true)}
+            {cell('h:wrote', 6, '기록', WRITE_COLOR, true)}
             {cell('h:new', 5, '신규', 'cyan', true)}
             {cell('h:hit', 4, '적중', 'magenta', true)}
           </Box>
@@ -414,7 +417,7 @@ export const register: Register = (on, options) => {
                 {cell(`c:turn:${row.turnId}`, 4, String(n))}
                 {cell(`c:steps:${row.turnId}`, 5, String(row.steps))}
                 {cell(`c:read:${row.turnId}`, 6, fmtTokens(row.read), 'green')}
-                {cell(`c:wrote:${row.turnId}`, 6, fmtTokens(row.write), 'yellow')}
+                {cell(`c:wrote:${row.turnId}`, 6, fmtTokens(row.write), WRITE_COLOR)}
                 {cell(`c:new:${row.turnId}`, 5, fmtTokens(row.fresh), 'cyan')}
                 {cell(`c:hit:${row.turnId}`, 4, `${pct}%`, hitColor(pct), true)}
               </Box>
@@ -426,7 +429,7 @@ export const register: Register = (on, options) => {
           <Button key="close" label="닫기" onPress={() => {}} />
           <Box key="legend" marginTop={1} flexDirection="column">
             <Text color="green">{sp('■ 읽음: 캐시에서 제공됨')}</Text>
-            <Text color="yellow">{sp('■ 기록: 새 캐시 항목')}</Text>
+            <Text color={WRITE_COLOR}>{sp('■ 기록: 새 캐시 항목')}</Text>
             <Text color="cyan">{sp('■ 신규: 캐시 없이 전송됨')}</Text>
           </Box>
         </Box>

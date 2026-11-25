@@ -206,7 +206,7 @@ describe('the band', () => {
     const ui = await band($)
     expect(await ui.find({ type: 'Text', text: /98%/ })).toBeDefined()
     expect(await ui.find({ type: 'Text', text: /읽음 80k/ })).toBeDefined()
-    expect(await ui.find({ type: 'Text', text: /기록 1k/ })).toBeDefined()
+    expect((await ui.find({ type: 'Text', text: /기록 1k/ }))?.props.color).toBe('#c2410c')
     expect(await ui.find({ type: 'Text', text: /신규 300/ })).toBeDefined()
     expect(await ui.find({ type: 'Text', text: /5m, 활성/ })).toBeDefined()
     // ours first, what the plugins beneath drew under it
@@ -287,9 +287,9 @@ describe('the band', () => {
 })
 
 describe('pane helpers', () => {
-  test('the countdown is green, then yellow below 40%, then red from the warning threshold', () => {
+  test('the countdown is green, then amber below 40%, then red from the warning threshold', () => {
     expect(lifeColor(250_000, '5m', 60_000)).toBe('green')
-    expect(lifeColor(110_000, '5m', 60_000)).toBe('yellow')
+    expect(lifeColor(110_000, '5m', 60_000)).toBe('#a16207')
     expect(lifeColor(60_000, '5m', 60_000)).toBe('red')
     expect(lifeColor(5_000, '1h', 60_000)).toBe('red')
     expect(lifeColor(1_800_000, '1h', 60_000)).toBe('green')
