@@ -288,11 +288,11 @@ describe('the band', () => {
 
 describe('pane helpers', () => {
   test('the countdown is green, then amber below 40%, then red from the warning threshold', () => {
-    expect(lifeColor(250_000, '5m', 60_000)).toBe('green')
+    expect(lifeColor(250_000, '5m', 60_000)).toBe('#15803d')
     expect(lifeColor(110_000, '5m', 60_000)).toBe('#a16207')
-    expect(lifeColor(60_000, '5m', 60_000)).toBe('red')
-    expect(lifeColor(5_000, '1h', 60_000)).toBe('red')
-    expect(lifeColor(1_800_000, '1h', 60_000)).toBe('green')
+    expect(lifeColor(60_000, '5m', 60_000)).toBe('#dc2626')
+    expect(lifeColor(5_000, '1h', 60_000)).toBe('#dc2626')
+    expect(lifeColor(1_800_000, '1h', 60_000)).toBe('#15803d')
   })
   test('segments sum to the width and keep small parts visible', () => {
     const s = segments(113_000, 4_000, 2, 48)

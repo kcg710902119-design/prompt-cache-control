@@ -38,6 +38,10 @@ import {
   advise,
   COUNTDOWN_MARKS,
   WARN_COLOR,
+  GREEN,
+  RED,
+  CYAN,
+  MAGENTA,
   bar,
   byTurn,
   fit,
@@ -63,6 +67,8 @@ const PANE = 'cache'
 const COMMAND = 'cache'
 // 기록 색: 노란색은 흰 배경에서 안 보여 진한 주황색으로 쓴다
 const WRITE_COLOR = '#c2410c'
+// 데스크톱 막대: 한 줄 높이보다 낮게 그려 위아래 줄과 붙지 않게 한다
+const BAR_HEIGHT = 0.6
 const KEEP = 200
 // below this a lapsed cache costs too little to interrupt anyone about
 const TOAST_MIN_TOKENS = 20_000
@@ -95,10 +101,10 @@ function current(policy: Policy, now: number) {
 }
 
 const COLOR: Record<Advice['kind'], string | undefined> = {
-  warm: 'green',
+  warm: GREEN,
   soon: WARN_COLOR,
-  expired: 'red',
-  miss: 'red',
+  expired: RED,
+  miss: RED,
   off: undefined,
   cold: undefined,
   uncached: undefined,
@@ -306,24 +312,24 @@ export const register: Register = (on, options) => {
     const wide = columns >= 80
     const cells = wide ? 10 : 6
     return stack(
-      <Box flexDirection="row" columnGap={1}>
+      <Box flexDirection="row" alignItems="center" columnGap={1}>
         <Text bold color={color}>{advice.kind === 'warm' ? '●' : advice.kind === 'soon' ? '▲' : advice.kind === 'off' || advice.kind === 'cold' || advice.kind === 'uncached' ? '○' : '✖'}</Text>
-        <Text bold color="cyan">캐시</Text>
+        <Text bold color={CYAN}>캐시</Text>
         {e.surface === 'terminal' ? (
           <Text color={color}>{bar(ratio, cells)}</Text>
         ) : (
-          <Box flexDirection="row" width={cells} height={1} flexShrink={0}>
-            <Box width={Math.round(ratio * cells)} height={1} flexShrink={0} backgroundColor={color} />
-            <Box width={cells - Math.round(ratio * cells)} height={1} flexShrink={0} backgroundColor="subtle" />
+          <Box flexDirection="row" width={cells} height={BAR_HEIGHT} flexShrink={0}>
+            <Box width={Math.round(ratio * cells)} height={BAR_HEIGHT} flexShrink={0} backgroundColor={color} />
+            <Box width={cells - Math.round(ratio * cells)} height={BAR_HEIGHT} flexShrink={0} backgroundColor="#80808040" />
           </Box>
         )}
         <Text bold>{`${Math.round(ratio * 100)}%`}</Text>
-        {wide && <Text color="green">{`읽음 ${fmtTokens(last.read)}`}</Text>}
+        {wide && <Text color={GREEN}>{`읽음 ${fmtTokens(last.read)}`}</Text>}
         {wide && <Text color={WRITE_COLOR}>{`기록 ${fmtTokens(last.write)}`}</Text>}
-        {wide && <Text color="cyan">{`신규 ${fmtTokens(last.fresh)}`}</Text>}
+        {wide && <Text color={CYAN}>{`신규 ${fmtTokens(last.fresh)}`}</Text>}
         {!wide && <Text dimColor>{`${fmtTokens(promptTokens(last))} 토큰`}</Text>}
         {advice.kind !== 'uncached' && advice.kind !== 'off' && (
-          <Text bold color={left > 0 ? lifeColor(left, ttl, policy.warnMs) : 'red'}>{left > 0 ? `⏱ ${fmtClock(left)}` : '⏱ 0:00'}</Text>
+          <Text bold color={left > 0 ? lifeColor(left, ttl, policy.warnMs) : RED}>{left > 0 ? `⏱ ${fmtClock(left)}` : '⏱ 0:00'}</Text>
         )}
         <Text dimColor wrap="truncate-end">{`${ttl}, ${advice.text}`}</Text>
       </Box>,
@@ -342,8 +348,8 @@ export const register: Register = (on, options) => {
     const counting = !!last && advice.kind !== 'uncached' && advice.kind !== 'off'
     // the countdown goes green, then amber, then red as the cache runs out
     const clockColor = counting ? lifeColor(left, ttl, policy.warnMs) : undefined
-    const stateColor = advice.kind === 'expired' || advice.kind === 'miss' ? 'red' : (clockColor ?? COLOR[advice.kind])
-    const hitColor = (pct: number) => (pct >= 80 ? 'green' : pct >= 40 ? WARN_COLOR : 'red')
+    const stateColor = advice.kind === 'expired' || advice.kind === 'miss' ? RED : (clockColor ?? COLOR[advice.kind])
+    const hitColor = (pct: number) => (pct >= 80 ? GREEN : pct >= 40 ? WARN_COLOR : RED)
     // solid bars are filled Boxes, not block characters, so HTML draws no seams between cells
     const solid = (key: string, parts: [number, string | undefined][]) => (
       <Box key={key} flexDirection="row" height={1} flexShrink={0}>
@@ -366,7 +372,7 @@ export const register: Register = (on, options) => {
     return (
       <Box flexDirection="column">
         <Box key="title" flexDirection="row" columnGap={1}>
-          <Text bold color="cyan">{sp('⚡ 프롬프트 캐시')}</Text>
+          <Text bold color={CYAN}>{sp('⚡ 프롬프트 캐시')}</Text>
           <Text dimColor>{sp(`수명 ${ttl} (${ttlSource})`)}</Text>
         </Box>
 
@@ -388,25 +394,25 @@ export const register: Register = (on, options) => {
         {last ? (
           <Box key="stack" flexDirection="column" marginTop={1}>
             <Box flexDirection="row" columnGap={1}>
-              {solid('stack', [[sr, 'green'], [sw, WRITE_COLOR], [sn, 'cyan']])}
+              {solid('stack', [[sr, GREEN], [sw, WRITE_COLOR], [sn, CYAN]])}
               <Text bold color={hitColor(Math.round(hitRatio(last) * 100))}>{sp(`적중 ${Math.round(hitRatio(last) * 100)}%`)}</Text>
             </Box>
             <Box flexDirection="row" columnGap={2}>
-              <Text color="green">{sp(`■ 읽음 ${fmtTokens(last.read)}`)}</Text>
+              <Text color={GREEN}>{sp(`■ 읽음 ${fmtTokens(last.read)}`)}</Text>
               <Text color={WRITE_COLOR}>{sp(`■ 기록 ${fmtTokens(last.write)}`)}</Text>
-              <Text color="cyan">{sp(`■ 신규 ${fmtTokens(last.fresh)}`)}</Text>
+              <Text color={CYAN}>{sp(`■ 신규 ${fmtTokens(last.fresh)}`)}</Text>
             </Box>
           </Box>
         ) : null}
 
         <Box key="table" flexDirection="column" marginTop={1}>
           <Box key="head" flexDirection="row" columnGap={1}>
-            {cell('h:turn', 4, '턴', 'cyan', true)}
-            {cell('h:steps', 5, '요청', 'cyan', true)}
-            {cell('h:read', 6, '읽음', 'green', true)}
+            {cell('h:turn', 4, '턴', CYAN, true)}
+            {cell('h:steps', 5, '요청', CYAN, true)}
+            {cell('h:read', 6, '읽음', GREEN, true)}
             {cell('h:wrote', 6, '기록', WRITE_COLOR, true)}
-            {cell('h:new', 5, '신규', 'cyan', true)}
-            {cell('h:hit', 4, '적중', 'magenta', true)}
+            {cell('h:new', 5, '신규', CYAN, true)}
+            {cell('h:hit', 4, '적중', MAGENTA, true)}
           </Box>
           {rows.length === 0 ? <Text dimColor>{sp('아직 요청 없음')}</Text> : null}
           {rows.map((row, i) => {
@@ -416,9 +422,9 @@ export const register: Register = (on, options) => {
               <Box key={`t:${row.turnId}`} flexDirection="row" columnGap={1}>
                 {cell(`c:turn:${row.turnId}`, 4, String(n))}
                 {cell(`c:steps:${row.turnId}`, 5, String(row.steps))}
-                {cell(`c:read:${row.turnId}`, 6, fmtTokens(row.read), 'green')}
+                {cell(`c:read:${row.turnId}`, 6, fmtTokens(row.read), GREEN)}
                 {cell(`c:wrote:${row.turnId}`, 6, fmtTokens(row.write), WRITE_COLOR)}
-                {cell(`c:new:${row.turnId}`, 5, fmtTokens(row.fresh), 'cyan')}
+                {cell(`c:new:${row.turnId}`, 5, fmtTokens(row.fresh), CYAN)}
                 {cell(`c:hit:${row.turnId}`, 4, `${pct}%`, hitColor(pct), true)}
               </Box>
             )
@@ -428,9 +434,9 @@ export const register: Register = (on, options) => {
         <Box key="foot" marginTop={1} flexDirection="column">
           <Button key="close" label="닫기" onPress={() => {}} />
           <Box key="legend" marginTop={1} flexDirection="column">
-            <Text color="green">{sp('■ 읽음: 캐시에서 제공됨')}</Text>
+            <Text color={GREEN}>{sp('■ 읽음: 캐시에서 제공됨')}</Text>
             <Text color={WRITE_COLOR}>{sp('■ 기록: 새 캐시 항목')}</Text>
-            <Text color="cyan">{sp('■ 신규: 캐시 없이 전송됨')}</Text>
+            <Text color={CYAN}>{sp('■ 신규: 캐시 없이 전송됨')}</Text>
           </Box>
         </Box>
       </Box>

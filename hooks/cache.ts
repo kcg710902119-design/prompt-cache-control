@@ -280,13 +280,18 @@ export function nextToastMark(secsLeft: number, warnSecs: number, level: number)
 
 // 주의 색: 노란색은 흰 배경에서 안 보여 진한 황갈색으로 쓴다
 export const WARN_COLOR = '#a16207'
+// 두 화면 공통 색: 밝은 배경과 어두운 배경에서 모두 보인다
+export const GREEN = '#15803d'
+export const RED = '#dc2626'
+export const CYAN = '#0e7490'
+export const MAGENTA = '#a21caf'
 
-export type LifeColor = 'green' | typeof WARN_COLOR | 'red'
+export type LifeColor = typeof GREEN | typeof WARN_COLOR | typeof RED
 
 /** Countdown colour: green while there is plenty, amber below 40% of the lifetime, red from the warning threshold down. */
 export function lifeColor(leftMs: number, ttl: Ttl, warnMs: number): LifeColor {
-  if (leftMs <= warnMs) return 'red'
-  return leftMs / ttlMs(ttl) <= 0.4 ? WARN_COLOR : 'green'
+  if (leftMs <= warnMs) return RED
+  return leftMs / ttlMs(ttl) <= 0.4 ? WARN_COLOR : GREEN
 }
 
 // requests are timed from their start, so a little slack keeps a hit that
